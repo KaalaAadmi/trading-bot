@@ -1,3 +1,9 @@
+# Core Configuration Settings for the Trading System
+
+# Ticker Updater Agent Output Path
+tickers:
+  file_path: "data/tickers.json"
+
 # Kafka Topics Configuration
 kafka:
   bootstrap_servers: "localhost:9092"

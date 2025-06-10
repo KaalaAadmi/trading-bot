@@ -1,0 +1,105 @@
+version: 1
+formatters:
+  detailed: # For file output
+    format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+
+  # Base colorized formatter for console (used by root, core, etc.)
+  colorized_base:
+    (): colorlog.ColoredFormatter
+    format: "%(log_color)s%(asctime)s - %(name)s - %(levelname)s%(reset)s: %(message_log_color)s%(message)s"
+    datefmt: "%Y-%m-%d %H:%M:%S"
+    log_colors: &color_levels # YAML anchor for reusing color levels
+      DEBUG: cyan
+      INFO: green
+      WARNING: yellow
+      ERROR: red
+      CRITICAL: red,bg_white
+    secondary_log_colors:
+      &secondary_color_messages # YAML anchor for reusing message colors
+      message:
+        DEBUG: white
+        INFO: white
+        WARNING: yellow
+        ERROR: red
+        CRITICAL: red
+
+  # Specialized formatter for TickerUpdaterAgent - name part in blue
+  colorized_ticker_updater_agent_name:
+    (): colorlog.ColoredFormatter
+    # Format: [level_color]asctime[reset] - [blue]name[reset] - [level_color]levelname[reset]: [message_color]message
+    format: "%(log_color)s%(asctime)s%(reset)s - %(blue)s%(name)s%(reset)s - %(log_color)s%(levelname)s%(reset)s: %(message_log_color)s%(message)s"
+    datefmt: "%Y-%m-%d %H:%M:%S"
+    log_colors: *color_levels # Use the same level colors
+    secondary_log_colors: *secondary_color_messages # Use the same message colors
+
+  # --- Add more specialized formatters for other agents here ---
+  # Example for a hypothetical 'DataCollectorAgent' with name in purple
+  # colorized_data_collector_agent_name:
+  #   (): colorlog.ColoredFormatter
+  #   format: "%(log_color)s%(asctime)s%(reset)s - %(purple)s%(name)s%(reset)s - %(log_color)s%(levelname)s%(reset)s: %(message_log_color)s%(message)s"
+  #   datefmt: "%Y-%m-%d %H:%M:%S"
+  #   log_colors: *color_levels
+  #   secondary_log_colors: *secondary_color_messages
+
+handlers:
+  # Base console handler using the base colorized formatter
+  console_base:
+    class: logging.StreamHandler
+    level: INFO
+    formatter: colorized_base
+    stream: ext://sys.stdout
+
+  # Specialized console handler for TickerUpdaterAgent
+  console_ticker_updater_agent:
+    class: logging.StreamHandler
+    level: INFO # Or set a specific level for this agent
+    formatter: colorized_ticker_updater_agent_name
+    stream: ext://sys.stdout
+
+  # --- Add more specialized console handlers for other agents here ---
+  # console_data_collector_agent:
+  #   class: logging.StreamHandler
+  #   level: INFO
+  #   formatter: colorized_data_collector_agent_name
+  #   stream: ext://sys.stdout
+
+  file_detailed: # Common file handler for all logs
+    class: logging.FileHandler
+    level: INFO # Or DEBUG if you want more detail in the file
+    formatter: detailed
+    filename: logs/system.log
+    delay: true
+
+loggers:
+  core:
+    level: INFO
+    handlers: [console_base, file_detailed]
+    propagate: no
+
+  # Specific logger for TickerUpdaterAgent
+  agents.ticker_updater.agent: # This should match logger=logging.getLogger(__name__) in that agent's file
+    level: INFO # Or DEBUG for this specific agent
+    handlers: [console_ticker_updater_agent, file_detailed] # Uses its own console handler
+    propagate: no # Important to prevent duplicate console logs from root
+
+  # --- Add specific loggers for other agents here ---
+  # agents.data_collector.agent:
+  #   level: INFO
+  #   handlers: [console_data_collector_agent, file_detailed]
+  #   propagate: no
+
+  # Generic 'agents' logger (if you have agents without specific color needs)
+  # This will catch logs from any logger under 'agents.*' not explicitly defined above.
+  agents:
+    level: INFO
+    handlers: [console_base, file_detailed] # Uses the base console coloring
+    propagate: no
+
+  backtesting:
+    level: INFO
+    handlers: [console_base, file_detailed]
+    propagate: no
+
+root:
+  level: INFO
+  handlers: [console_base, file_detailed] # Root logger uses the base console handler
