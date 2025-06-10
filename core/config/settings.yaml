@@ -1,0 +1,20 @@
+# Kafka Topics Configuration
+kafka:
+  bootstrap_servers: "localhost:9092"
+  topics:
+    # --- Main Topics ---
+    ticker_updater: "topic_ticker_updates"
+    market_research: "topic_market_research"
+    data_collector: "topic_data_collector"
+    technical_analysis: "topic_technical_analysis"
+    portfolio_manager: "topic_portfolio_manager"
+    execution_results: "topic_execution_results"
+    position_updates: "topic_position_updates"
+    journaling: "topic_journaling_updates"
+    performance_updates: "topic_performance_updates"
+    # --- Dead-Letter Queue (DLQ) Topics for Error Handling ---
+    technical_analysis_dlq: "topic_technical_analysis_dlq"
+    portfolio_manager_dlq: "topic_portfolio_manager_dlq"
+    execution_results_dlq: "topic_execution_results_dlq"
+    position_updates_dlq: "topic_position_updates_dlq"
+    journaling_dlq: "topic_journaling_updates_dlq"
