@@ -9,6 +9,7 @@ from selenium.webdriver.common.by import By
 
 from core.config.config_loader import load_settings
 from core.kafka_broker.kafka_producer import KafkaProducerWrapper
+from core.zerodha.client import ZerodhaClient
 
 logger = logging.getLogger(__name__)
 
@@ -95,14 +96,21 @@ class TickerUpdaterAgent:
             # Combine the tickers and remove duplicates
             combined_tickers = list(set(nifty50_tickers + bank_nifty_tickers))
             logger.info(f"Combined tickers count: {len(combined_tickers)}")
+            logger.info("Fetching instrument tokens for combined tickers...")
+            instruments = ZerodhaClient.get_instance().instruments("NSE")
+            final_tickers = {}
+            for inst in instruments:
+                if inst["tradingsymbol"] in combined_tickers:
+                    final_tickers[inst["tradingsymbol"]] = inst["instrument_token"]
 
+            logger.info(f"Final tickers count: {len(final_tickers)}")
             os.makedirs(os.path.dirname(self.output_path), exist_ok=True)  # Ensure directory exists
             with open(self.output_path, "w") as file:
-                json.dump(combined_tickers, file, indent=4)
+                json.dump(final_tickers, file, indent=4)
             logger.info("Updated tickers and saved to %s.", self.output_path)
 
             # Publish the updated tickers to Kafka
-            await self.kafka_producer.publish(self.kafka_topic, {"message": "Ticker update completed successfully.", "tickers": combined_tickers})
+            await self.kafka_producer.publish(self.kafka_topic, {"message": "Ticker update completed successfully.", "tickers": final_tickers})
             logger.info("Published updated tickers to Kafka topic '%s'.", self.kafka_topic)
 
         except Exception as e:
