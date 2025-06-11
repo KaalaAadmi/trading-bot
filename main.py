@@ -5,8 +5,11 @@ import os
 
 import yaml
 
+from agents.market_research.agent import MarketResearchAgent
 from agents.ticker_updater.agent import TickerUpdaterAgent
 from core.kafka_broker.kafka_producer import KafkaProducerWrapper
+
+# from core.scheduler.apscheduler_config import start_scheduler
 
 # logging.basicConfig(level=logging.INFO)
 
@@ -61,9 +64,17 @@ async def start_agents():
     await ticker_updater_agent.update_tickers()
     logging.info("TickerUpdaterAgent has completed its task.")
 
+    # Initialize the MarketResearchAgent
+    market_research_agent = MarketResearchAgent()
+    logging.info("Running the MarketResearchAgent to perform market research.")
+    await market_research_agent.subscribe_to_ticker_updates()
+    logging.info("MarketResearchAgent has completed its task.")
+
     logging.info("All agents started successfully.")
     logging.info("[main.py] Loop ID: %s", id(asyncio.get_running_loop()))
 
+    # start_scheduler()  # Start the scheduler to run tasks periodically
+    # logging.info("Scheduler started successfully.")
     while True:
         await asyncio.sleep(1)  # Prevent the script from exiting
 

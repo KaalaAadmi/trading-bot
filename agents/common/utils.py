@@ -2,12 +2,17 @@ import json
 
 # import yfinance as yf
 import logging
+import os
 from datetime import datetime, time
 from decimal import Decimal
 
 import holidays
+import pyotp
+from dotenv import load_dotenv
 
-logger = logging.getLogger("agents.common.utils")
+load_dotenv()
+
+logger = logging.getLogger(__name__)
 
 
 def is_public_holiday():
@@ -41,3 +46,17 @@ def serialize(obj):
         return "null"
     else:
         return obj
+
+
+def get_TOTP():
+    """
+    Get the current TOTP (Time-based One-Time Password) value.
+    """
+    try:
+        token = os.getenv("ZERODHA_TOTP_QR_CODE_TOKEN")
+        totp = pyotp.TOTP(token).now()
+        logger.info("Current TOTP is: " + totp)
+        return totp
+    except Exception as e:
+        logger.error(f"Error generating TOTP: {e}")
+        return None

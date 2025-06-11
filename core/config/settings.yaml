@@ -24,3 +24,10 @@ kafka:
     execution_results_dlq: "topic_execution_results_dlq"
     position_updates_dlq: "topic_position_updates_dlq"
     journaling_dlq: "topic_journaling_updates_dlq"
+
+agents:
+  market_research:
+    volume_threshold: 1000000 # 1M shares/day
+    volatility_threshold: 0.02 # 2% daily volatility
+    price_change_threshold: 0.02 # ±2% price change in the last 5 days
+    loopback_days: 60 # Days of historical data to analyze

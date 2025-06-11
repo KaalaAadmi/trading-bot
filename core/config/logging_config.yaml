@@ -56,6 +56,12 @@ handlers:
     formatter: colorized_ticker_updater_agent_name
     stream: ext://sys.stdout
 
+  console_market_research_agent:
+    class: logging.StreamHandler
+    level: INFO # Or set a specific level for this agent
+    formatter: colorized_base # Reusing the base formatter for simplicity
+    stream: ext://sys.stdout
+
   # --- Add more specialized console handlers for other agents here ---
   # console_data_collector_agent:
   #   class: logging.StreamHandler
@@ -81,6 +87,11 @@ loggers:
     level: INFO # Or DEBUG for this specific agent
     handlers: [console_ticker_updater_agent, file_detailed] # Uses its own console handler
     propagate: no # Important to prevent duplicate console logs from root
+
+  agents.market_research.agent:
+    level: INFO
+    handlers: [console_market_research_agent, file_detailed] # Uses its own console handler
+    propagate: no
 
   # --- Add specific loggers for other agents here ---
   # agents.data_collector.agent:
