@@ -24,10 +24,50 @@ formatters:
         CRITICAL: red
 
   # Specialized formatter for TickerUpdaterAgent - name part in blue
+  colorized_kafka_producer:
+    (): colorlog.ColoredFormatter
+    # Format: [level_color]asctime[reset] - [blue]name[reset] - [level_color]levelname[reset]: [message_color]message
+    format: "%(log_color)s%(asctime)s%(reset)s - %(cyan)s%(name)s%(reset)s - %(log_color)s%(levelname)s%(reset)s: %(message_log_color)s%(message)s"
+    datefmt: "%Y-%m-%d %H:%M:%S"
+    log_colors: *color_levels # Use the same level colors
+    secondary_log_colors: *secondary_color_messages # Use the same message colors
+
+  colorized_zerodha_client:
+    (): colorlog.ColoredFormatter
+    # Format: [level_color]asctime[reset] - [blue]name[reset] - [level_color]levelname[reset]: [message_color]message
+    format: "%(log_color)s%(asctime)s%(reset)s - %(light_purple)s%(name)s%(reset)s - %(log_color)s%(levelname)s%(reset)s: %(message_log_color)s%(message)s"
+    datefmt: "%Y-%m-%d %H:%M:%S"
+    log_colors: *color_levels # Use the same level colors
+    secondary_log_colors: *secondary_color_messages # Use the same message colors
+
+  colorized_ap_scheduler:
+    (): colorlog.ColoredFormatter
+    # Format: [level_color]asctime[reset] - [blue]name[reset] - [level_color]levelname[reset]: [message_color]message
+    format: "%(log_color)s%(asctime)s%(reset)s - %(light_cyan)s%(name)s%(reset)s - %(log_color)s%(levelname)s%(reset)s: %(message_log_color)s%(message)s"
+    datefmt: "%Y-%m-%d %H:%M:%S"
+    log_colors: *color_levels # Use the same level colors
+    secondary_log_colors: *secondary_color_messages # Use the same message colors
+
   colorized_ticker_updater_agent_name:
     (): colorlog.ColoredFormatter
     # Format: [level_color]asctime[reset] - [blue]name[reset] - [level_color]levelname[reset]: [message_color]message
     format: "%(log_color)s%(asctime)s%(reset)s - %(blue)s%(name)s%(reset)s - %(log_color)s%(levelname)s%(reset)s: %(message_log_color)s%(message)s"
+    datefmt: "%Y-%m-%d %H:%M:%S"
+    log_colors: *color_levels # Use the same level colors
+    secondary_log_colors: *secondary_color_messages # Use the same message colors
+
+  colorized_market_research_agent_name:
+    (): colorlog.ColoredFormatter
+    # Format: [level_color]asctime[reset] - [blue]name[reset] - [level_color]levelname[reset]: [message_color]message
+    format: "%(log_color)s%(asctime)s%(reset)s - %(yellow)s%(name)s%(reset)s - %(log_color)s%(levelname)s%(reset)s: %(message_log_color)s%(message)s"
+    datefmt: "%Y-%m-%d %H:%M:%S"
+    log_colors: *color_levels # Use the same level colors
+    secondary_log_colors: *secondary_color_messages # Use the same message colors
+
+  colorized_data_collector_agent_name:
+    (): colorlog.ColoredFormatter
+    # Format: [level_color]asctime[reset] - [blue]name[reset] - [level_color]levelname[reset]: [message_color]message
+    format: "%(log_color)s%(asctime)s%(reset)s - %(purple)s%(name)s%(reset)s - %(log_color)s%(levelname)s%(reset)s: %(message_log_color)s%(message)s"
     datefmt: "%Y-%m-%d %H:%M:%S"
     log_colors: *color_levels # Use the same level colors
     secondary_log_colors: *secondary_color_messages # Use the same message colors
@@ -50,6 +90,24 @@ handlers:
     stream: ext://sys.stdout
 
   # Specialized console handler for TickerUpdaterAgent
+  console_kafka_producer:
+    class: logging.StreamHandler
+    level: INFO # Or set a specific level for this agent
+    formatter: colorized_kafka_producer
+    stream: ext://sys.stdout
+
+  console_zerodha_client:
+    class: logging.StreamHandler
+    level: INFO # Or set a specific level for this agent
+    formatter: colorized_zerodha_client
+    stream: ext://sys.stdout
+
+  console_ap_scheduler:
+    class: logging.StreamHandler
+    level: INFO # Or set a specific level for this agent
+    formatter: colorized_ap_scheduler
+    stream: ext://sys.stdout
+
   console_ticker_updater_agent:
     class: logging.StreamHandler
     level: INFO # Or set a specific level for this agent
@@ -59,9 +117,14 @@ handlers:
   console_market_research_agent:
     class: logging.StreamHandler
     level: INFO # Or set a specific level for this agent
-    formatter: colorized_base # Reusing the base formatter for simplicity
+    formatter: colorized_market_research_agent_name # Reusing the base formatter for simplicity
     stream: ext://sys.stdout
 
+  console_data_collector_agent:
+    class: logging.StreamHandler
+    level: INFO # Or set a specific level for this agent
+    formatter: colorized_data_collector_agent_name # Reusing the base formatter for simplicity
+    stream: ext://sys.stdout
   # --- Add more specialized console handlers for other agents here ---
   # console_data_collector_agent:
   #   class: logging.StreamHandler
@@ -83,6 +146,21 @@ loggers:
     propagate: no
 
   # Specific logger for TickerUpdaterAgent
+  core.zerodha.client:
+    level: INFO
+    handlers: [console_zerodha_client, file_detailed] # Uses its own console handler
+    propagate: no
+
+  core.kafka_broker.kafka_producer:
+    level: INFO
+    handlers: [console_kafka_producer, file_detailed] # Uses its own console handler
+    propagate: no
+
+  core.config.ap_scheduler:
+    level: INFO
+    handlers: [console_ap_scheduler, file_detailed]
+    propagate: no
+
   agents.ticker_updater.agent: # This should match logger=logging.getLogger(__name__) in that agent's file
     level: INFO # Or DEBUG for this specific agent
     handlers: [console_ticker_updater_agent, file_detailed] # Uses its own console handler
@@ -93,6 +171,10 @@ loggers:
     handlers: [console_market_research_agent, file_detailed] # Uses its own console handler
     propagate: no
 
+  agents.data_collector.agent:
+    level: INFO
+    handlers: [console_data_collector_agent, file_detailed]
+    propagate: no
   # --- Add specific loggers for other agents here ---
   # agents.data_collector.agent:
   #   level: INFO

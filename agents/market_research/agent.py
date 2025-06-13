@@ -33,8 +33,8 @@ class MarketResearchAgent:
 
         # Initialize Kafka producer
         kafka_cfg = self.settings["kafka"]
-        self.ticker_updates = KafkaConsumerWrapper(bootstrap_servers=kafka_cfg["bootstrap_servers"], topic=kafka_cfg["topics"]["ticker_updater"], group_id="market_research_agent")
-        self.market_research = KafkaProducerWrapper(bootstrap_servers=kafka_cfg["bootstrap_servers"])
+        self.consumer = KafkaConsumerWrapper(bootstrap_servers=kafka_cfg["bootstrap_servers"], topic=kafka_cfg["topics"]["ticker_updater"], group_id="market_research_agent")
+        self.producer = KafkaProducerWrapper(bootstrap_servers=kafka_cfg["bootstrap_servers"])
         self.kafka_topic = kafka_cfg["topics"]["market_research"]
         logger.info("MarketResearchAgent initialized")
 
@@ -42,7 +42,7 @@ class MarketResearchAgent:
         """
         Subscribe to the ticker updates topic and once message is received, perform the market research.
         """
-        await self.ticker_updates.consume(self.run_on_message)
+        await self.consumer.consume(self.run_on_message)
 
     async def run_on_message(self, message):
         """
@@ -145,9 +145,13 @@ class MarketResearchAgent:
         assets = self.fetch_assets()
         ohlcv_data = {asset: self.fetch_ohlcv(asset, instrument_token) for asset, instrument_token in assets.items() if asset is not None}  # Skip assets with missing data
         filtered_assets = self.filter_assets(ohlcv_data)
-
+        # create a dictionary including the asset name, instrument token and then send it in message in kafka topic
+        filtered_assets = [{"asset": asset, "instrument_token": assets[asset]} for asset in filtered_assets if asset in assets]
+        if not filtered_assets:
+            logger.info("No assets passed the filtering criteria. Exiting Market Research Agent.")
+            return
         # Publish the filtered assets as a list to the market_research_signals stream
-        await self.market_research.publish(self.kafka_topic, {"filtered_assets": json.dumps(filtered_assets)})
+        await self.producer.publish(self.kafka_topic, {"filtered_assets": json.dumps(filtered_assets)})
         logger.info("Published filtered assets to topic '%s': %s", self.kafka_topic, filtered_assets)
 
         logger.info("Market Research Agent processing completed. Filtered %d assets for next steps.", len(filtered_assets))

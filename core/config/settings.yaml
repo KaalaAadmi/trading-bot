@@ -25,6 +25,26 @@ kafka:
     position_updates_dlq: "topic_position_updates_dlq"
     journaling_dlq: "topic_journaling_updates_dlq"
 
+# Database Configuration
+database:
+  user: ${POSTGRES_USER}
+  password: ${POSTGRES_PASSWORD}
+  db: ${POSTGRES_DB}
+  host: ${POSTGRES_HOST}
+  port: ${POSTGRES_PORT}
+
+# Trading Configuration
+timeframes:
+  htf: "60minute" # There is no 1-hour timeframe in Zerodha, so we use 60-minute
+  ltf: "5minute"
+
+history:
+  htf_lookback_days: 30
+  ltf_lookback_days: 7
+  htf_interval_minutes: 60
+  ltf_interval_minutes: 5
+
+# Agent Configuration
 agents:
   market_research:
     volume_threshold: 1000000 # 1M shares/day

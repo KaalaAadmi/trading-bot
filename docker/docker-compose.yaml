@@ -1,32 +1,30 @@
 services:
   timescaledb:
     image: timescale/timescaledb:latest-pg14
-    container_name: trading-bot-timescaledb
+    container_name: timescaledb
+    networks:
+      - trading_bot_network
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: bot_user
+      POSTGRES_PASSWORD: bot_password
+      POSTGRES_DB: trading_bot
+    volumes:
+      - timescaledb_data:/var/lib/postgresql/data
+      - ../db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    restart: always
+
+  redis:
+    image: redis:latest
+    container_name: redis
     networks:
       - trading_bot_network
     restart: always
-    environment:
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      - POSTGRES_USER=${POSTGRES_USER}
-      - POSTGRES_DB=${POSTGRES_DB}
     ports:
-      - "5432:5432"
+      - "6379:6379"
     volumes:
-      - timescaledb_data:/var/lib/postgresql/data
-      - ${PWD}/../db/init.sql:/docker-entrypoint-initdb.d/init.sql
-    env_file:
-      - ../.env
-
-  # redis:
-  #   image: redis:latest
-  #   container_name: redis
-  #   networks:
-  #     - trading_bot_network
-  #   restart: always
-  #   ports:
-  #     - "6379:6379"
-  #   volumes:
-  #     - redis_data:/data
+      - redis_data:/data
 
   zookeeper:
     image: confluentinc/cp-zookeeper:7.5.3
@@ -86,16 +84,16 @@ services:
     env_file:
       - ../.env
 
-  # redis_exporter:
-  #   image: oliver006/redis_exporter:latest
-  #   container_name: redis_exporter
-  #   networks:
-  #     - trading_bot_network
-  #   ports:
-  #     - "9121:9121"
-  #   environment:
-  #     - REDIS_ADDR=redis:6379
-  #   restart: always
+  redis_exporter:
+    image: oliver006/redis_exporter:latest
+    container_name: redis_exporter
+    networks:
+      - trading_bot_network
+    ports:
+      - "9121:9121"
+    environment:
+      - REDIS_ADDR=redis:6379
+    restart: always
 
   postgres_exporter:
     image: prometheuscommunity/postgres-exporter
@@ -113,8 +111,7 @@ services:
 volumes:
   timescaledb_data:
   grafana_data:
-  # redis_data:
+  redis_data:
 
 networks:
   trading_bot_network:
-    external: true
